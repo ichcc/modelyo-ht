@@ -6,10 +6,14 @@ provider "google" {
 }
 
 resource "google_compute_instance" "controller" {
+  metadata = {
+  ssh-keys = "${var.ssh_user}:${file(var.ssh_pub_path)}"
+}
   name         = var.controller_name
   machine_type = var.machine_type
   zone         = var.zone
   allow_stopping_for_update = true
+  tags = ["ssh"] 
 
   boot_disk {
     initialize_params {
@@ -18,17 +22,23 @@ resource "google_compute_instance" "controller" {
   }
 
   network_interface {
-    network = "default"
-    access_config {}
+  network = google_compute_network.openstack_net.self_link
+  subnetwork = google_compute_subnetwork.openstack_subnet.self_link
+    
+    access_config {
+      nat_ip = google_compute_address.controller_ip.address # or compute_ip for compute
+    }
   }
 }
 
 resource "google_compute_instance" "compute" {
+  metadata = {
+  ssh-keys = "${var.ssh_user}:${file(var.ssh_pub_path)}"
+}
   name         = var.compute_name
   machine_type = var.machine_type
   zone         = var.zone
   allow_stopping_for_update = true 
-
   boot_disk {
     initialize_params {
       image = "ubuntu-os-cloud/ubuntu-2204-lts"
@@ -36,9 +46,12 @@ resource "google_compute_instance" "compute" {
   }
 
   network_interface {
-    network = "default"
-    subnetwork = google_compute_subnetwork.openstack_subnet.name
-    access_config {}
+  network = google_compute_network.openstack_net.self_link
+  subnetwork = google_compute_subnetwork.openstack_subnet.self_link
+    
+  access_config {
+    nat_ip = google_compute_address.compute_ip.address # or compute_ip for compute
+  }
   }
   tags = ["ssh"]
 }
@@ -68,3 +81,22 @@ resource "google_compute_firewall" "ssh" {
   target_tags   = ["ssh"]
 }
 
+
+resource "google_compute_address" "controller_ip" {
+  name   = "controller-ip"
+  region = var.region
+}
+
+resource "google_compute_address" "compute_ip" {
+  name   = "compute-ip"
+  region = var.region
+}
+
+
+output "controller_ip" {
+  value = google_compute_address.controller_ip.address
+}
+
+output "compute_ip" {
+  value = google_compute_address.compute_ip.address
+}

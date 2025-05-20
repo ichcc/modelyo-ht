@@ -8,3 +8,6 @@ variable "compute_name"    { default = "openstack-compute" }
 variable "machine_type" { default = "e2-micro" }
 
 variable "gcp_credentials_file" {}
+
+variable "ssh_user"     { default = "ubuntu" }
+variable "ssh_pub_path" { default = "../.ssh/id_openstack.pub" }
