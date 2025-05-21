@@ -17,7 +17,7 @@ resource "google_compute_instance" "controller" {
 
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+      image = "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20250502a"
     }
   }
 
@@ -28,6 +28,11 @@ resource "google_compute_instance" "controller" {
     access_config {
       nat_ip = google_compute_address.controller_ip.address # or compute_ip for compute
     }
+
+    alias_ip_range {
+      ip_cidr_range = "10.10.0.5/32"  # Single IP instead of a range
+    }
+
   }
 }
 
@@ -41,7 +46,7 @@ resource "google_compute_instance" "compute" {
   allow_stopping_for_update = true 
   boot_disk {
     initialize_params {
-      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+      image = "ubuntu-os-cloud/ubuntu-2404-noble-amd64-v20250502a"
     }
   }
 
@@ -52,6 +57,10 @@ resource "google_compute_instance" "compute" {
   access_config {
     nat_ip = google_compute_address.compute_ip.address # or compute_ip for compute
   }
+  alias_ip_range {
+      ip_cidr_range = "10.10.0.4/32"  # Single IP instead of a range
+    }
+
   }
   tags = ["ssh"]
 }
